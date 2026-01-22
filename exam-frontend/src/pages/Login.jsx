@@ -111,7 +111,7 @@ export default function Login() {
               <div className="d-flex justify-content-between">
                 <label className="form-label small fw-bold text-uppercase text-muted" style={{ fontSize: '0.7rem' }}>Password</label>
                 <Link to="/forgot-password" size="sm" className="text-decoration-none small fw-bold text-primary">
-                  Forgot?
+                  Forgot Password?
                 </Link>
               </div>
               <div className="position-relative">

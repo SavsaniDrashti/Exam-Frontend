@@ -149,6 +149,7 @@ export default function StudentExamPage() {
 
   const currentQuestion = questions[currentQuestionIndex];
   const currentAnswer = answers[currentQuestion.questionId] || {};
+  
 
   return (
     <div style={midnightTheme.container}>
@@ -226,39 +227,74 @@ export default function StudentExamPage() {
             />
           )}
 
-          {/* CODING UI */}
-          {(currentQuestion.questionType?.toUpperCase() === "CODE" || currentQuestion.questionType?.toUpperCase() === "CODING") && (
-            <div className="rounded overflow-hidden border border-secondary">
-              <Editor 
-                height="380px" 
-                theme="vs-dark" 
-                language={currentQuestion.codingLanguage?.toLowerCase() || "cpp"}
-                value={currentAnswer.code || ""}
-                options={{ fontSize: 14, minimap: { enabled: false }, automaticLayout: true, scrollBeyondLastLine: false }}
-                onChange={(val) => setAnswers(prev => ({
-                  ...prev, [currentQuestion.questionId]: { ...currentAnswer, code: val }
-                }))}
-              />
-              <div className="bg-dark p-2 d-flex justify-content-between border-top border-secondary">
-                <button className="btn btn-outline-info btn-sm font-monospace" disabled={loading} onClick={async () => {
-                  setLoading(true);
-                  try {
-                    const res = await axios.post(`https://localhost:7240/api/student/run-code`, 
-                      { QuestionId: currentQuestion.questionId, Code: currentAnswer.code },
-                      { headers: { Authorization: `Bearer ${token}` } });
-                    setAnswers(prev => ({ ...prev, [currentQuestion.questionId]: { ...currentAnswer, output: res.data.output } }));
-                  } catch (err) { alert("Execution error."); }
-                  setLoading(false);
-                }}>
-                  {loading ? ">_ EXECUTING..." : ">_ RUN_MODULE"}
-                </button>
-              </div>
-              <div className="bg-black p-3 text-success font-monospace" style={{ minHeight: "100px", fontSize: "0.85rem" }}>
-                <div className="text-secondary border-bottom border-secondary pb-1 mb-2" style={{ fontSize: "0.7rem" }}>LOG_STREAM</div>
-                {currentAnswer.output || "Idle..."}
-              </div>
-            </div>
-          )}
+        {/* CODING UI */}
+{(currentQuestion.questionType?.toUpperCase() === "CODE" || currentQuestion.questionType?.toUpperCase() === "CODING") && (
+  <div className="rounded overflow-hidden border border-secondary">
+    <Editor 
+      height="380px" 
+      theme="vs-dark" 
+      language={currentQuestion.codingLanguage?.toLowerCase() || "cpp"}
+      value={currentAnswer.code || ""}
+      options={{ fontSize: 14, minimap: { enabled: false }, automaticLayout: true }}
+      onChange={(val) => {
+        setAnswers(prev => ({
+          ...prev, [currentQuestion.questionId]: { ...currentAnswer, code: val }
+        }));
+      }}
+      onMount={(editor) => {
+        // Save to DB when student leaves the code editor area
+        editor.onDidBlurEditorText(() => {
+          saveAnswerToDB(currentQuestion.questionId, { 
+            code: currentAnswer.code, 
+            compilerOutput: currentAnswer.output 
+          });
+        });
+      }}
+    />
+    <div className="bg-dark p-2 d-flex justify-content-between border-top border-secondary">
+      <button 
+        className="btn btn-outline-info btn-sm font-monospace" 
+        disabled={loading} 
+        onClick={async () => {
+          setLoading(true);
+          try {
+            const res = await axios.post(`https://localhost:7240/api/student/exam/${examId}/run-code`, 
+              { QuestionId: currentQuestion.questionId, Code: currentAnswer.code },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            
+            const logs = res.data.output;
+
+            // 1. Update UI
+            setAnswers(prev => ({ 
+              ...prev, 
+              [currentQuestion.questionId]: { ...currentAnswer, output: logs } 
+            }));
+
+            // 2. Persist to DB immediately so the teacher sees the latest output
+            await saveAnswerToDB(currentQuestion.questionId, { 
+              code: currentAnswer.code, 
+              compilerOutput: logs 
+            });
+
+          } catch (err) { 
+            alert("Execution error: Ensure Judge0 service is active."); 
+          }
+          setLoading(false);
+        }}
+      >
+        {loading ? ">_ EXECUTING..." : ">_ RUN_MODULE"}
+      </button>
+      <span className="text-secondary small font-monospace pt-1" style={{fontSize: '0.65rem'}}>
+        {loading ? "BUSY" : "READY"}
+      </span>
+    </div>
+    <div className="bg-black p-3 text-success font-monospace" style={{ minHeight: "100px", fontSize: "0.85rem", whiteSpace: "pre-wrap" }}>
+      <div className="text-secondary border-bottom border-secondary pb-1 mb-2" style={{ fontSize: "0.7rem" }}>LOG_STREAM</div>
+      {currentAnswer.output || "No execution data found in current session."}
+    </div>
+  </div>
+)}
         </div>
 
         {/* Footer Navigation */}

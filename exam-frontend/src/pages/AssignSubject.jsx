@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { FaUserGraduate, FaBookOpen, FaTrashAlt, FaExchangeAlt, FaLayerGroup } from "react-icons/fa";
+import { useEffect, useState, useRef } from "react";
+import { FaUserGraduate, FaBookOpen, FaTrashAlt, FaExchangeAlt, FaLayerGroup, FaChevronDown } from "react-icons/fa";
 import { useOutletContext } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
@@ -12,16 +12,28 @@ import {
 
 export default function AssignSubject() {
   const { theme } = useOutletContext() || { theme: "dark" };
-  const isDark = theme === "dark";
-
   const [teachers, setTeachers] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
+  
+  // NEW: State for manual dropdown control
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { 
+    loadData(); 
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const loadData = async () => {
     try {
@@ -51,6 +63,7 @@ export default function AssignSubject() {
       await assignSubjects({ TeacherId: selectedTeacher, SubjectIds: selectedSubjects });
       setSelectedTeacher("");
       setSelectedSubjects([]);
+      setIsDropdownOpen(false);
       const updated = await getAllAssignments();
       setAssignments(updated.data);
     } catch (err) {
@@ -71,7 +84,6 @@ export default function AssignSubject() {
     }
   };
 
-  /* ================= THEME SYNCED WITH TEACHERS.JSX ================= */
   const colors = {
     bg: "#0f172a",
     card: "#1e293b",
@@ -81,24 +93,9 @@ export default function AssignSubject() {
   };
 
   const styles = {
-    pageWrapper: {
-      backgroundColor: colors.bg,
-      minHeight: "100vh",
-      padding: "2rem",
-      color: "#f8fafc"
-    },
-    card: {
-      backgroundColor: colors.card,
-      border: `1px solid ${colors.border}`,
-      borderRadius: "16px",
-      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)"
-    },
-    input: {
-      backgroundColor: colors.bg,
-      color: "#f8fafc",
-      border: "1px solid #334155",
-      borderRadius: "10px"
-    }
+    pageWrapper: { backgroundColor: colors.bg, minHeight: "100vh", padding: "2rem", color: "#f8fafc" },
+    card: { backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: "16px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)" },
+    input: { backgroundColor: colors.bg, color: "#f8fafc", border: "1px solid #334155", borderRadius: "10px" }
   };
 
   return (
@@ -106,59 +103,28 @@ export default function AssignSubject() {
       <Helmet><title>Curriculum Mapping | EDUMETRICS</title></Helmet>
 
       <style>{`
-        /* Global Table Overrides */
-        .custom-table {
-          --bs-table-bg: transparent !important;
-          --bs-table-color: #f8fafc !important;
-        }
-        .table > :not(caption) > * > * {
-          background-color: transparent !important;
-          box-shadow: none !important;
-        }
-
-        /* High Visibility Placeholder/Select */
-        select.form-select, input::placeholder {
-          color: #94a3b8 !important;
-          opacity: 1 !important;
-        }
-
-        .custom-table thead th {
-          background-color: rgba(0,0,0,0.2) !important;
-          color: #94a3b8 !important;
-          font-size: 0.75rem;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          padding: 18px 20px;
-          border: none;
-        }
-
-        .custom-table tbody tr {
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-          transition: background 0.2s;
-        }
-
-        .custom-table tbody tr:hover {
-          background-color: rgba(255, 255, 255, 0.02) !important;
-        }
-
-        .action-btn {
-          background: rgba(255, 255, 255, 0.05);
+        .custom-table { --bs-table-bg: transparent !important; --bs-table-color: #f8fafc !important; }
+        .table > :not(caption) > * > * { background-color: transparent !important; box-shadow: none !important; }
+        .custom-table thead th { background-color: rgba(0,0,0,0.2) !important; color: #94a3b8 !important; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; padding: 18px 20px; border: none; }
+        .custom-table tbody tr { border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; transition: background 0.2s; }
+        .action-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid #334155; color: #f8fafc; border-radius: 8px; }
+        .action-btn:hover { background: rgba(248, 113, 113, 0.1); border-color: #f87171; color: #f87171; }
+        
+        /* Manual Dropdown Styling */
+        .manual-dropdown-menu {
+          display: ${isDropdownOpen ? 'block' : 'none'};
+          position: absolute;
+          z-index: 1050;
+          top: 100%;
+          left: 0;
+          width: 100%;
+          background-color: ${colors.card};
           border: 1px solid #334155;
-          color: #f8fafc;
-          transition: all 0.2s;
-          border-radius: 8px;
-        }
-
-        .action-btn:hover {
-          background: rgba(248, 113, 113, 0.1);
-          border-color: #f87171;
-          color: #f87171;
-        }
-
-        .form-select:focus {
-          border-color: #818cf8;
-          box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
-          color: #fff;
+          border-radius: 10px;
+          margin-top: 5px;
+          max-height: 250px;
+          overflow-y: auto;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
       `}</style>
 
@@ -167,7 +133,6 @@ export default function AssignSubject() {
         <p style={{ color: colors.textMuted }} className="small">Assign subjects to faculty personnel</p>
       </div>
 
-      {/* ➕ ASSIGNMENT FORM (Clean Design like Teachers.jsx) */}
       <div style={styles.card} className="p-4 mb-4 border-0">
         <div className="d-flex align-items-center gap-2 mb-3" style={{ color: colors.primary }}>
           <FaLayerGroup />
@@ -194,27 +159,40 @@ export default function AssignSubject() {
           </div>
 
           <div className="col-md-5">
-            <label className="small mb-2" style={{color: colors.textMuted}}>Select Subjects ({selectedSubjects.length} selected)</label>
-            <div className="dropdown">
+            <label className="small mb-2" style={{color: colors.textMuted}}>Select Subjects</label>
+            <div className="position-relative" ref={dropdownRef}>
               <button 
-                className="form-select text-start ps-3 shadow-none w-100" 
+                className="form-select text-start ps-3 shadow-none w-100 d-flex justify-content-between align-items-center" 
                 type="button" 
                 style={styles.input}
-                data-bs-toggle="dropdown" 
-                data-bs-auto-close="outside"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
-                {selectedSubjects.length === 0 ? "Pick subjects..." : `${selectedSubjects.length} Subjects Selected`}
+                <span>{selectedSubjects.length === 0 ? "Pick subjects..." : `${selectedSubjects.length} Selected`}</span>
+                <FaChevronDown size={12} style={{ color: colors.textMuted }} />
               </button>
-              <ul className="dropdown-menu dropdown-menu-dark shadow-lg border-secondary w-100" style={{backgroundColor: colors.card, maxHeight: '300px', overflowY: 'auto'}}>
-                {subjects.map((s) => (
-                  <li key={s.subjectId} className="dropdown-item py-2" onClick={() => toggleSubject(s.subjectId)} style={{cursor: 'pointer'}}>
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" checked={selectedSubjects.includes(s.subjectId)} readOnly />
-                      <label className="form-check-label ms-2">{s.subjectName}</label>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              
+              <div className="manual-dropdown-menu">
+                {subjects.length === 0 ? (
+                    <div className="p-3 text-center small text-muted">No subjects found</div>
+                ) : (
+                    subjects.map((s) => (
+                        <div 
+                          key={s.subjectId} 
+                          className="px-3 py-2 d-flex align-items-center" 
+                          style={{ cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                          onClick={() => toggleSubject(s.subjectId)}
+                        >
+                          <input 
+                            className="form-check-input mt-0" 
+                            type="checkbox" 
+                            checked={selectedSubjects.includes(s.subjectId)} 
+                            onChange={() => {}} // Controlled by div click
+                          />
+                          <span className="ms-3 text-white" style={{ fontSize: '0.9rem' }}>{s.subjectName}</span>
+                        </div>
+                      ))
+                )}
+              </div>
             </div>
           </div>
 
@@ -232,8 +210,7 @@ export default function AssignSubject() {
         </div>
       </div>
 
-      {/* 📋 TABLE SECTION */}
-      <div style={styles.card} className="overflow-hidden border-0 shadow-lg">
+      <div style={styles.card} className="border-0 shadow-lg">
         <div className="p-3 border-bottom d-flex align-items-center gap-2" style={{ borderColor: colors.border }}>
             <FaBookOpen style={{ color: colors.primary }} />
             <h6 className="mb-0 fw-bold text-white">Active Curriculum Map</h6>

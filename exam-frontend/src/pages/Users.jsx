@@ -290,7 +290,7 @@ export default function Users() {
                 <tr key={getUserId(u)}>
                   <td>
                     <div className="fw-bold">{u.fullName}</div>
-                    <small className="text-muted">{u.email}</small>
+                    <small className="text-secondary">{u.email}</small>
                   </td>
 
                   <td>
