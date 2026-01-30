@@ -76,7 +76,7 @@ export default function StudentExamPage() {
     if (isTimeOut) alert("Time Expired! Submitting automatically...");
 
     try {
-      await axios.post(`https://localhost:7240/api/student/exam/${examId}/submit`, {}, {
+      await axios.post(`http://10.119.220.26:8084/api/student/exam/${examId}/submit`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!isTimeOut) alert("Exam submitted successfully!");
@@ -91,7 +91,7 @@ export default function StudentExamPage() {
   useEffect(() => {
     const fetchExamData = async () => {
       try {
-        const res = await axios.get(`https://localhost:7240/api/student/exam/${examId}/questions`, {
+        const res = await axios.get(`http://10.119.220.26:8084/api/student/exam/${examId}/questions`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = res.data;
@@ -132,7 +132,7 @@ export default function StudentExamPage() {
   // ================= 4. SAVE PROGRESS =================
   const saveAnswerToDB = async (qId, payload) => {
     try {
-      await axios.post(`https://localhost:7240/api/student/exam/${examId}/submit-answer`,
+      await axios.post(`http://10.119.220.26:8084/api/student/exam/${examId}/submit-answer`,
         { questionId: qId, ...payload },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -258,7 +258,7 @@ export default function StudentExamPage() {
         onClick={async () => {
           setLoading(true);
           try {
-            const res = await axios.post(`https://localhost:7240/api/student/exam/${examId}/run-code`, 
+            const res = await axios.post(`http://10.119.220.26:8084/api/student/exam/${examId}/run-code`, 
               { QuestionId: currentQuestion.questionId, Code: currentAnswer.code },
               { headers: { Authorization: `Bearer ${token}` } }
             );

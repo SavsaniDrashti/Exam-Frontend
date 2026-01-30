@@ -36,8 +36,8 @@ export default function Dashboard() {
 
         if (isStudent) {
           const [statusRes, resultsRes] = await Promise.all([
-            axios.get("https://localhost:7240/api/student/exams/status", { headers }),
-            axios.get("https://localhost:7240/api/results/my-results", { headers })
+            axios.get("http://10.119.220.26:8084/api/student/exams/status", { headers }),
+            axios.get("http://10.119.220.26:8084/api/results/my-results", { headers })
           ]);
 
           const completed = statusRes.data.filter(e => e.isCompleted).length;
@@ -54,8 +54,8 @@ export default function Dashboard() {
           ]);
 
         } else if (isTeacher) {
-          const res = await axios.get("https://localhost:7240/api/results/my-students-results", { headers });
-          const myExams = await axios.get("https://localhost:7240/api/exams/assignments", { headers });
+          const res = await axios.get("http://10.119.220.26:8084/api/results/my-students-results", { headers });
+          const myExams = await axios.get("http://10.119.220.26:8084/api/exams/assignments", { headers });
 
           setStats({
             users: [...new Set(res.data.map(r => r.studentName))].length,

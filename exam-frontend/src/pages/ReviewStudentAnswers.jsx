@@ -34,7 +34,7 @@ const ReviewStudentAnswers = () => {
 
   useEffect(() => {
     axios
-      .get(`https://localhost:7240/api/results/student-answers/${studentExamId}`, {
+      .get(`http://10.119.220.26:8084/api/results/student-answers/${studentExamId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then((res) => {
@@ -91,7 +91,7 @@ const ReviewStudentAnswers = () => {
     };
 
     try {
-      const res = await axios.post("https://localhost:7240/api/results/evaluate", payload, {
+      const res = await axios.post("http://10.119.220.26:8084/api/results/evaluate", payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       Swal.fire({ 
@@ -152,7 +152,7 @@ const ReviewStudentAnswers = () => {
           </div>
           <div className="d-flex align-items-center gap-4">
             <div className="text-end">
-              <small style={{ color: colors.textLight }} className="d-block text-uppercase fw-bold" style={{fontSize: '0.7rem'}}>Live Score</small>
+              <small style={{ color: colors.textLight }} className="d-block text-uppercase fw-bold" >Live Score</small>
               <h4 className="mb-0 fw-bold" style={{ color: colors.success }}><FaTrophy className="me-2"/>{total}</h4>
             </div>
             <button className="btn px-4 fw-bold shadow-sm" style={{ backgroundColor: colors.primary, color: 'white' }} onClick={submitEvaluation}>

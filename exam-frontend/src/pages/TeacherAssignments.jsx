@@ -28,7 +28,7 @@ const TeacherAssignments = () => {
 
   useEffect(() => {
     axios
-      .get("https://localhost:7240/api/exams/assignments", {
+      .get("http://10.119.220.26:8084/api/exams/assignments", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setExams(res.data))

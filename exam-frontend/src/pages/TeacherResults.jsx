@@ -35,7 +35,7 @@ const TeacherResults = () => {
       return;
     }
 
-    axios.get("https://localhost:7240/api/results/my-students-results", {
+    axios.get("http://10.119.220.26:8084/api/results/my-students-results", {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(res => {

@@ -20,7 +20,7 @@ const ForgotPassword = () => {
         setLoading(true);
         setMessage({ text: '', type: '' });
         try {
-            const res = await axios.post('https://localhost:7240/api/auth/forgot-password', { email });
+            const res = await axios.post('http://10.119.220.26:8084/api/auth/forgot-password', { email });
             
             // ✅ ADDED DEBUG LOG HERE
             console.log("Debug OTP from Server:", res.data.debug_otp); 
@@ -38,7 +38,7 @@ const ForgotPassword = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post('https://localhost:7240/api/auth/reset-password-otp', {
+            await axios.post('http://10.119.220.26:8084/api/auth/reset-password-otp', {
                 email,
                 otpCode,
                 newPassword
