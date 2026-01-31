@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { 
   FaUserCheck, FaClipboardList, FaSearch, FaUserGraduate, 
-  FaArrowRight, FaCheckCircle, FaUndo 
+  FaArrowRight, FaCheckCircle, FaUndo,FaLock 
 } from "react-icons/fa";
 import { Helmet } from "react-helmet-async";
 import { getMyExams, getAllStudents, assignExam } from "../api/examApi";
@@ -140,30 +140,62 @@ export default function AssignExam() {
       </div>
 
       <div className="row g-4">
-        {/* Step 1: Exam List */}
-        <div className="col-lg-5">
-          <div style={styles.card} className="p-4 h-100">
-            <h6 className="fw-bold mb-4 d-flex align-items-center gap-2" style={{ color: colors.primary }}>
-              <FaClipboardList /> 1. Choose Assessment
-            </h6>
-            <div style={styles.listArea} className="custom-scrollbar">
-              {exams.map((e) => {
-                const isSelected = assignForm.examId === e.examId;
-                return (
-                  <div 
-                    key={e.examId} 
-                    className="hover-item"
-                    style={styles.item(isSelected, "129, 140, 248")}
-                    onClick={() => setAssignForm({ ...assignForm, examId: e.examId })}
-                  >
-                    <span>{e.examName}</span>
-                    {isSelected && <FaCheckCircle />}
-                  </div>
-                );
-              })}
+   {/* Step 1: Exam List */}
+<div className="col-lg-5">
+  <div style={styles.card} className="p-4 h-100">
+    <h6 className="fw-bold mb-4 d-flex align-items-center gap-2" style={{ color: colors.primary }}>
+      <FaClipboardList /> 1. Choose Assessment
+    </h6>
+    <div style={styles.listArea} className="custom-scrollbar">
+      {exams
+        // 1. FILTER: Hide exams that are fully completed/ended
+        .filter(e => {
+            const now = new Date();
+            const endTime = new Date(e.endTime || e.EndTime);
+            const isCompleted = e.isCompleted || e.IsCompleted || (now > endTime);
+            return !isCompleted;
+        })
+        .map((e) => {
+          // 2. LOCK LOGIC: Lock exams that have already started (Matches ExamManager logic)
+          const now = new Date();
+          const startTime = new Date(e.startTime || e.StartTime);
+          const isLocked = e.isLocked || e.IsLocked || (now > startTime);
+          
+          const isSelected = assignForm.examId === e.examId;
+
+          return (
+            <div 
+              key={e.examId} 
+              className={`hover-item ${isLocked ? 'disabled-exam' : ''}`}
+              style={{
+                ...styles.item(isSelected, "129, 140, 248"),
+                cursor: isLocked ? "not-allowed" : "pointer",
+                opacity: isLocked ? 0.6 : 1,
+                backgroundColor: isLocked ? "rgba(0,0,0,0.2)" : isSelected ? "rgba(129, 140, 248, 0.1)" : "transparent",
+                pointerEvents: isLocked ? "none" : "auto" // Completely prevents clicks on locked items
+              }}
+              onClick={() => {
+                if (isLocked) return; 
+                setAssignForm({ ...assignForm, examId: e.examId });
+              }}
+            >
+              <div className="d-flex flex-column">
+                <span className={isLocked ? "text-muted" : ""}>
+                   {e.examName}
+                </span>
+                {isLocked && (
+                  <small style={{ color: "#f87171", fontSize: "0.65rem" }} className="fw-bold">
+                    <FaLock className="me-1"/> ALREADY STARTED / LOCKED
+                  </small>
+                )}
+              </div>
+              {isSelected && !isLocked && <FaCheckCircle />}
             </div>
-          </div>
-        </div>
+          );
+        })}
+    </div>
+  </div>
+</div>
 
         {/* Step 2: Student List */}
         <div className="col-lg-7">

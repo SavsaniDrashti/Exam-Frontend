@@ -204,7 +204,7 @@ export default function Sidebar({ collapsed }) {
       {/* 4. FOOTER / LOGOUT */}
       <div style={{ padding: "16px", background: "rgba(0,0,0,0.2)" }}>
         <button
-          onClick={() => { localStorage.clear(); window.location.href = "/login"; }}
+          onClick={() => { localStorage.clear(); window.location.href = "/"; }}
           style={{
             width: "100%",
             display: "flex",

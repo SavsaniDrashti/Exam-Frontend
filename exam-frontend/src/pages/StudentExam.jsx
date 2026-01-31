@@ -28,7 +28,7 @@ export default function StudentExam() {
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const res = await axios.get("https://localhost:7240/api/student/exams", {
+        const res = await axios.get("http://10.119.220.26:8084/api/student/exams", {
           headers: { Authorization: `Bearer ${token}` }
         });
         setExams(res.data);

@@ -43,7 +43,7 @@ const [loading, setLoading] = useState(false); // Add this line
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const res = await axios.get("https://localhost:7240/api/exams/my-exams", { 
+        const res = await axios.get("http://10.119.220.26:8084/api/exams/my-exams", { 
           headers: { Authorization: `Bearer ${token}` } 
         });
         setExams(res.data);
@@ -76,7 +76,7 @@ const [loading, setLoading] = useState(false); // Add this line
     try {
       const types = ["mcq", "paragraph", "coding"];
       const results = await Promise.all(
-        types.map(t => axios.get(`https://localhost:7240/api/questions/exam/${selectedExam}/${t}`, { 
+        types.map(t => axios.get(`http://10.119.220.26:8084/api/questions/exam/${selectedExam}/${t}`, { 
           headers: { Authorization: `Bearer ${token}` } 
         }))
       );
@@ -123,60 +123,18 @@ const handleSubmit = async (e) => {
         OptionD: questionType === "MCQ" ? mcqOptions.D : null,
         CorrectOption: questionType === "MCQ" ? mcqOptions.correct : null,
     };
-
-    // 2. Start Loading
-    setLoading(true); 
-
     try {
-        let savedQuestion;
-        
-        if (editingQuestionId) {
-            const res = await axios.put(`https://localhost:7240/api/questions/${editingQuestionId}`, payload, { 
-                headers: { Authorization: `Bearer ${token}` } 
-            });
-            savedQuestion = res.data || { ...payload, QuestionId: editingQuestionId, questionId: editingQuestionId };
-        } else {
-            const res = await axios.post("https://localhost:7240/api/questions", payload, { 
-                headers: { Authorization: `Bearer ${token}` } 
-            });
-            savedQuestion = res.data; 
-        }
+      if (editingQuestionId) {
+        await axios.put(`https://localhost:7240/api/questions/${editingQuestionId}`, payload, { headers: { Authorization: `Bearer ${token}` } });
+      } else {
+        await axios.post("https://localhost:7240/api/questions", payload, { headers: { Authorization: `Bearer ${token}` } });
+      }
+      resetForm();
+      fetchQuestions();
+      Swal.fire({ icon: 'success', title: 'Saved', timer: 1500, showConfirmButton: false, background: colors.card, color: colors.textMain });
+    } catch (err) { console.error(err); }
+  };
 
-        // 3. Update State Directly (Instant UI)
-        setQuestions(prev => {
-            const typeKey = questionType.toUpperCase();
-            const updatedList = [...(prev[typeKey] || [])];
-
-            if (editingQuestionId) {
-                const index = updatedList.findIndex(q => (q.questionId ?? q.QuestionId) === editingQuestionId);
-                if (index !== -1) updatedList[index] = savedQuestion;
-            } else {
-                updatedList.unshift(savedQuestion); // Put new question at the top
-            }
-
-            return { ...prev, [typeKey]: updatedList };
-        });
-
-        setActiveTab(questionType.toUpperCase());
-        resetForm();
-        
-        Swal.fire({ 
-            icon: 'success', 
-            title: 'Saved Successfully', 
-            timer: 1500, 
-            showConfirmButton: false, 
-            background: colors.card, 
-            color: colors.textMain 
-        });
-
-    } catch (err) {
-        console.error("Save error:", err);
-        Swal.fire({ title: "Error", text: "Failed to save question", icon: "error" });
-    } finally {
-        // 4. Stop Loading
-        setLoading(false);
-    }
-};
   const resetForm = () => {
     setQuestionText(""); setMarks(2);
     setMcqOptions({ A: "", B: "", C: "", D: "", correct: "" });
@@ -202,7 +160,7 @@ const handleSubmit = async (e) => {
     const res = await Swal.fire({ title: 'Delete Question?', icon: 'warning', showCancelButton: true, background: colors.card, color: colors.textMain });
     if (res.isConfirmed) {
       try {
-        await axios.delete(`https://localhost:7240/api/questions/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+        await axios.delete(`http://10.119.220.26:8084/api/questions/${id}`, { headers: { Authorization: `Bearer ${token}` } });
         fetchQuestions();
       } catch (err) { console.error(err); }
     }

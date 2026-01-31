@@ -258,7 +258,11 @@ export default function StudentExamPage() {
         onClick={async () => {
           setLoading(true);
           try {
+<<<<<<< HEAD
             const res = await axios.post(`https://localhost:7240/api/student/exam/${examId}/run-code`, 
+=======
+            const res = await axios.post(`https://localhost:7240/api/student/exam/${examId}/run-code`, 
+>>>>>>> bbf1c5a9604b3a3f62f2000a19ee5364aa18efb8
               { QuestionId: currentQuestion.questionId, Code: currentAnswer.code },
               { headers: { Authorization: `Bearer ${token}` } }
             );
