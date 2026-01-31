@@ -20,11 +20,10 @@ const ForgotPassword = () => {
         setLoading(true);
         setMessage({ text: '', type: '' });
         try {
-<<<<<<< HEAD
+
             const res = await axios.post('https://localhost:7240/api/auth/forgot-password', { email });
-=======
-            const res = await axios.post('https://localhost:7240/api/auth/forgot-password', { email });
->>>>>>> bbf1c5a9604b3a3f62f2000a19ee5364aa18efb8
+
+            
             
             // ✅ ADDED DEBUG LOG HERE
             console.log("Debug OTP from Server:", res.data.debug_otp); 
@@ -42,11 +41,9 @@ const ForgotPassword = () => {
         e.preventDefault();
         setLoading(true);
         try {
-<<<<<<< HEAD
+
             await axios.post('https://localhost:7240/api/auth/reset-password-otp', {
-=======
-            await axios.post('https://localhost:7240/api/auth/reset-password-otp', {
->>>>>>> bbf1c5a9604b3a3f62f2000a19ee5364aa18efb8
+
                 email,
                 otpCode,
                 newPassword
