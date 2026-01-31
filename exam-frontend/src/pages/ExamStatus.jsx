@@ -34,7 +34,7 @@ const ExamStatus = () => {
     const fetchExams = async () => {
       try {
         const response = await axios.get(
-          "http://10.119.220.26:8084/api/exams/status", 
+          "https://localhost:7240/api/exams/status", 
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setExams(response.data);

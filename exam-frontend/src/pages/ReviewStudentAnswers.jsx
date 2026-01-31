@@ -34,7 +34,7 @@ const ReviewStudentAnswers = () => {
 
   useEffect(() => {
     axios
-      .get(`http://10.119.220.26:8084/api/results/student-answers/${studentExamId}`, {
+      .get(`https://localhost:7240/api/results/student-answers/${studentExamId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then((res) => {
@@ -91,7 +91,7 @@ const ReviewStudentAnswers = () => {
     };
 
     try {
-      const res = await axios.post("http://10.119.220.26:8084/api/results/evaluate", payload, {
+      const res = await axios.post("https://localhost:7240/api/results/evaluate", payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       Swal.fire({ 

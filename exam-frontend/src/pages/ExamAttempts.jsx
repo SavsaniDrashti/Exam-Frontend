@@ -33,7 +33,7 @@ const ExamAttempts = () => {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`http://10.119.220.26:8084/api/results/exam-attempts/${examId}`, {
+      .get(`https://localhost:7240/api/results/exam-attempts/${examId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {

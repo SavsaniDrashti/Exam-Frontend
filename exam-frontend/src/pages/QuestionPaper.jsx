@@ -28,7 +28,7 @@ export default function QuestionPaper() {
   // ================= FETCH EXAMS =================
   useEffect(() => {
     axios
-      .get("http://10.119.220.26:8084/api/exams/my-exams", {
+      .get("https://localhost:7240/api/exams/my-exams", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setExams(res.data))
@@ -43,9 +43,9 @@ export default function QuestionPaper() {
     }
 
     Promise.all([
-      axios.get(`http://10.119.220.26:8084/api/questions/exam/${selectedExam}/mcq`, { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get(`http://10.119.220.26:8084/api/questions/exam/${selectedExam}/paragraph`, { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get(`http://10.119.220.26:8084/api/questions/exam/${selectedExam}/coding`, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(`https://localhost:7240/api/questions/exam/${selectedExam}/mcq`, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(`https://localhost:7240/api/questions/exam/${selectedExam}/paragraph`, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(`https://localhost:7240/api/questions/exam/${selectedExam}/coding`, { headers: { Authorization: `Bearer ${token}` } }),
     ])
       .then(([mcq, para, coding]) => {
         setQuestions([...mcq.data, ...para.data, ...coding.data]);

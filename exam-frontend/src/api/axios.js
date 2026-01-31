@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://10.119.220.26:8084/api", // make sure port matches your API
+  baseURL: "https://localhost:7240/api", // make sure port matches your API
   headers: { "Content-Type": "application/json" }
 });
 
