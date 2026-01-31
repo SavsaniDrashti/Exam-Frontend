@@ -1,157 +1,113 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import api from "../api/axios";
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from "react-helmet-async";
-import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, ChevronRight, AlertCircle, ShieldCheck, HelpCircle, MessageSquare, ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
+import { Mail, Lock, ShieldCheck, ChevronRight, ArrowLeft, KeyRound, AlertCircle } from "lucide-react";
 
-export default function ForgotPassword() {
-  const [step, setStep] = useState(1); // 1: Email, 2: Answer & Reset
-  const [email, setEmail] = useState("");
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+const ForgotPassword = () => {
+    const [step, setStep] = useState(1);
+    const [email, setEmail] = useState('');
+    const [otpCode, setOtpCode] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [message, setMessage] = useState({ text: '', type: '' });
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-  // Step 1: Request the security question from Backend
-  const handleFetchQuestion = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+    // Step 1: Send Email to generate OTP
+    const handleRequestOtp = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage({ text: '', type: '' });
+        try {
+            const res = await axios.post('https://localhost:7240/api/auth/forgot-password', { email });
+            
+            // ✅ ADDED DEBUG LOG HERE
+            console.log("Debug OTP from Server:", res.data.debug_otp); 
 
-    try {
-      const response = await api.post("/auth/get-security-question", { email });
-      setQuestion(response.data.question);
-      setStep(2);
-    } catch (err) {
-      setError("We couldn't find an account with that email address.");
-    } finally {
-      setLoading(false);
-    }
-  };
+            setMessage({ text: "OTP sent! Check your email (or console for debug).", type: 'success' });
+            setStep(2);
+        } catch (err) {
+            setMessage({ text: err.response?.data || "Email not found", type: 'danger' });
+        }
+        setLoading(false);
+    };
 
-  // Step 2: Submit answer and new password
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+    // Step 2: Verify OTP and Change Password
+    const handleResetPassword = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await axios.post('https://localhost:7240/api/auth/reset-password-otp', {
+                email,
+                otpCode,
+                newPassword
+            });
+            alert("Password updated successfully!");
+            navigate('/');
+        } catch (err) {
+            setMessage({ text: err.response?.data || "Invalid or Expired OTP", type: 'danger' });
+        }
+        setLoading(false);
+    };
 
-    try {
-      await api.post("/auth/reset-with-answer", {
-        email,
-        answer,
-        newPassword
-      });
-      alert("Password reset successful! Please sign in.");
-      navigate("/");
-    } catch (err) {
-      setError("The security answer is incorrect. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    return (
+        <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="min-vh-100 d-flex align-items-center justify-content-center p-4"
+            style={{ background: "radial-gradient(circle at top left, #1e293b, #0f172a)", fontFamily: "'Inter', sans-serif" }}
+        >
+            <Helmet><title>Reset Password | EDUMETRICS</title></Helmet>
 
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      className="min-vh-100 d-flex flex-column flex-lg-row bg-white"
-      style={{ fontFamily: "'Inter', sans-serif" }}
-    >
-      <Helmet><title>Reset Password | EDUMETRICS EMS</title></Helmet>
+            <div className="w-100" style={{ maxWidth: "440px", zIndex: 1 }}>
+                <div className="card border-0 shadow-2xl p-4 p-md-5" style={{ borderRadius: "20px", background: "#ffffff" }}>
+                    
+                    <div className="mb-4 text-center">
+                        <h2 className="fw-bold text-dark mb-1">{step === 1 ? "Forgot Password?" : "Verify OTP"}</h2>
+                        <p className="text-secondary small">Follow the instructions sent to {email || 'your email'}</p>
+                    </div>
 
-      {/* LEFT PANEL: BRANDING (Shared Style) */}
-      <div className="d-none d-lg-flex col-lg-6 flex-column justify-content-between p-5 text-white" 
-           style={{ background: "radial-gradient(circle at top left, #1e293b, #0f172a)", position: "relative", overflow: "hidden" }}>
-        <div className="z-1">
-          <div className="d-flex align-items-center gap-2 mb-5">
-            <div className="rounded-3 d-flex align-items-center justify-content-center" style={{ width: "40px", height: "40px", background: "#6366f1" }}>
-              <ShieldCheck size={24} />
+                    {message.text && (
+                        <div className={`alert border-0 d-flex align-items-center mb-4`} 
+                             style={{ backgroundColor: message.type === 'danger' ? "#fff1f2" : "#f0fdf4", color: message.type === 'danger' ? "#e11d48" : "#16a34a", borderRadius: "10px" }}>
+                            <AlertCircle size={18} className="me-2" />
+                            <span className="small fw-medium">{message.text}</span>
+                        </div>
+                    )}
+
+                    {step === 1 ? (
+                        <form onSubmit={handleRequestOtp}>
+                            <div className="mb-4">
+                                <label className="form-label small fw-bold text-uppercase text-muted">Email Address</label>
+                                <div className="position-relative">
+                                    <span className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"><Mail size={18} /></span>
+                                    <input type="email" className="form-control form-control-lg ps-5 shadow-none" placeholder="name@institution.edu" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                                </div>
+                            </div>
+                            <button type="submit" className="btn btn-dark w-100 py-3 fw-bold" style={{ backgroundColor: "#0f172a", borderRadius: "10px" }} disabled={loading}>
+                                {loading ? "Sending..." : "Send Reset Code"}
+                            </button>
+                        </form>
+                    ) : (
+                        <form onSubmit={handleResetPassword}>
+                            <div className="mb-3">
+                                <label className="form-label small fw-bold text-uppercase text-muted">6-Digit Code</label>
+                                <input type="text" className="form-control form-control-lg text-center fw-bold font-monospace shadow-none" maxLength="6" placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value)} required style={{ letterSpacing: "4px", fontSize: "1.5rem" }} />
+                            </div>
+                            <div className="mb-4">
+                                <label className="form-label small fw-bold text-uppercase text-muted">New Password</label>
+                                <input type="password" className="form-control form-control-lg shadow-none" placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+                            </div>
+                            <button type="submit" className="btn btn-dark w-100 py-3 fw-bold mb-3" style={{ backgroundColor: "#0f172a", borderRadius: "10px" }} disabled={loading}>
+                                Update Password
+                            </button>
+                        </form>
+                    )}
+                </div>
             </div>
-            <span className="fs-4 fw-bold tracking-tight">EDUMETRICS</span>
-          </div>
-          <div style={{ marginTop: "8vh" }}>
-            <h1 className="display-4 fw-bold mb-4">Account <br /><span style={{ color: "#818cf8" }}>Recovery.</span></h1>
-            <p className="lead opacity-75">Follow the steps to securely verify your identity and regain access to your dashboard.</p>
-          </div>
-        </div>
-      </div>
+        </motion.div>
+    );
+};
 
-      {/* RIGHT PANEL: FORM */}
-      <div className="col-12 col-lg-6 d-flex align-items-center justify-content-center p-4">
-        <div className="w-100" style={{ maxWidth: "400px" }}>
-          <Link to="/" className="text-decoration-none text-muted small fw-bold d-flex align-items-center mb-4">
-            <ArrowLeft size={16} className="me-2" /> Back to Sign In
-          </Link>
-
-          <AnimatePresence mode="wait">
-            {step === 1 ? (
-              <motion.div key="step1" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}>
-                <h2 className="fw-bold text-dark mb-1">Identify Account</h2>
-                <p className="text-secondary mb-4">Enter your email to retrieve your security question.</p>
-                
-                <form onSubmit={handleFetchQuestion}>
-                  <div className="mb-4">
-                    <label className="form-label small fw-bold text-uppercase text-muted" style={{ fontSize: "0.7rem" }}>Email Address</label>
-                    <div className="position-relative">
-                      <span className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"><Mail size={18} /></span>
-                      <input type="email" className="form-control form-control-lg ps-5 shadow-none" placeholder="name@institution.edu" style={{ borderRadius: "10px" }} 
-                        value={email} onChange={(e) => setEmail(e.target.value)} required />
-                    </div>
-                  </div>
-                  <button type="submit" className="btn btn-dark w-100 py-3 fw-bold" disabled={loading}>
-                    {loading ? <span className="spinner-border spinner-border-sm"></span> : "Continue"}
-                  </button>
-                </form>
-              </motion.div>
-            ) : (
-              <motion.div key="step2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
-                <h2 className="fw-bold text-dark mb-1">Security Challenge</h2>
-                <p className="text-secondary mb-4">Verify your identity by answering your secret question.</p>
-
-                <form onSubmit={handleResetPassword}>
-                  <div className="mb-3 p-3 bg-light rounded-3 border">
-                    <label className="d-block small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: "0.6rem" }}>Your Question</label>
-                    <span className="fw-medium text-dark">{question}</span>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label small fw-bold text-uppercase text-muted" style={{ fontSize: "0.7rem" }}>Your Answer</label>
-                    <div className="position-relative">
-                      <span className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"><MessageSquare size={18} /></span>
-                      <input type="text" className="form-control form-control-lg ps-5 shadow-none" placeholder="Answer here..." style={{ borderRadius: "10px" }} 
-                        value={answer} onChange={(e) => setAnswer(e.target.value)} required />
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="form-label small fw-bold text-uppercase text-muted" style={{ fontSize: "0.7rem" }}>New Password</label>
-                    <div className="position-relative">
-                      <span className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"><Lock size={18} /></span>
-                      <input type="password" className="form-control form-control-lg ps-5 shadow-none" placeholder="••••••••" style={{ borderRadius: "10px" }} 
-                        value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
-                    </div>
-                  </div>
-
-                  <button type="submit" className="btn btn-primary w-100 py-3 fw-bold" style={{ backgroundColor: "#4f46e5" }} disabled={loading}>
-                    {loading ? <span className="spinner-border spinner-border-sm"></span> : "Reset Password"}
-                  </button>
-                </form>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {error && (
-            <div className="alert alert-danger mt-4 border-0 d-flex align-items-center" style={{ backgroundColor: "#fff1f2", color: "#e11d48", borderRadius: "10px" }}>
-              <AlertCircle size={18} className="me-2" /> 
-              <span className="small fw-medium">{error}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
+export default ForgotPassword;

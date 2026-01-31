@@ -27,7 +27,8 @@ export default function CreateQuestions() {
   const [questions, setQuestions] = useState({ MCQ: [], PARAGRAPH: [], CODING: [] });
   const [activeTab, setActiveTab] = useState("MCQ");
   const [searchTerm, setSearchTerm] = useState("");
-
+// --- State Management ---
+const [loading, setLoading] = useState(false); // Add this line
   const colors = {
     bg: "#0f172a",
     card: "#1e293b",
@@ -83,43 +84,99 @@ export default function CreateQuestions() {
     } catch (err) { console.error("Fetch error", err); }
   };
 
-  const handleSubmit = async (e) => {
+// Add this to your state declarations at the top
+// const [loading, setLoading] = useState(false);
+
+const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedExam) return;
+
+    // 1. Prepare Data & Logic
     const maxLimit = selectedExamDetails?.totalMarks ?? selectedExamDetails?.TotalMarks ?? 0;
     const newMarksValue = parseInt(marks);
     let projectedTotal = currentTotalMarks + newMarksValue;
-    if (editingQuestionId) {
-      const all = [...questions.MCQ, ...questions.PARAGRAPH, ...questions.CODING];
-      const oldQ = all.find(q => (q.questionId ?? q.QuestionId) === editingQuestionId);
-      projectedTotal -= (oldQ?.marks ?? oldQ?.Marks ?? 0);
-    }
-    if (projectedTotal > maxLimit) {
-      return Swal.fire({ title: "Weightage Exceeded", text: `Max marks allowed: ${maxLimit}.`, icon: "error", background: colors.card, color: colors.textMain });
-    }
-    const payload = {
-      ExamId: parseInt(selectedExam), 
-      QuestionText: questionText, 
-      QuestionType: questionType, 
-      Marks: newMarksValue,
-      OptionA: questionType === "MCQ" ? mcqOptions.A : null,
-      OptionB: questionType === "MCQ" ? mcqOptions.B : null,
-      OptionC: questionType === "MCQ" ? mcqOptions.C : null,
-      OptionD: questionType === "MCQ" ? mcqOptions.D : null,
-      CorrectOption: questionType === "MCQ" ? mcqOptions.correct : null,
-    };
-    try {
-      if (editingQuestionId) {
-        await axios.put(`https://localhost:7240/api/questions/${editingQuestionId}`, payload, { headers: { Authorization: `Bearer ${token}` } });
-      } else {
-        await axios.post("https://localhost:7240/api/questions", payload, { headers: { Authorization: `Bearer ${token}` } });
-      }
-      resetForm();
-      fetchQuestions();
-      Swal.fire({ icon: 'success', title: 'Saved', timer: 1500, showConfirmButton: false, background: colors.card, color: colors.textMain });
-    } catch (err) { console.error(err); }
-  };
 
+    if (editingQuestionId) {
+        const all = [...questions.MCQ, ...questions.PARAGRAPH, ...questions.CODING];
+        const oldQ = all.find(q => (q.questionId ?? q.QuestionId) === editingQuestionId);
+        projectedTotal -= (oldQ?.marks ?? oldQ?.Marks ?? 0);
+    }
+
+    if (projectedTotal > maxLimit) {
+        return Swal.fire({ 
+            title: "Weightage Exceeded", 
+            text: `Max marks allowed: ${maxLimit}.`, 
+            icon: "error", 
+            background: colors.card, 
+            color: colors.textMain 
+        });
+    }
+
+    const payload = {
+        ExamId: parseInt(selectedExam),
+        QuestionText: questionText,
+        QuestionType: questionType,
+        Marks: newMarksValue,
+        OptionA: questionType === "MCQ" ? mcqOptions.A : null,
+        OptionB: questionType === "MCQ" ? mcqOptions.B : null,
+        OptionC: questionType === "MCQ" ? mcqOptions.C : null,
+        OptionD: questionType === "MCQ" ? mcqOptions.D : null,
+        CorrectOption: questionType === "MCQ" ? mcqOptions.correct : null,
+    };
+
+    // 2. Start Loading
+    setLoading(true); 
+
+    try {
+        let savedQuestion;
+        
+        if (editingQuestionId) {
+            const res = await axios.put(`https://localhost:7240/api/questions/${editingQuestionId}`, payload, { 
+                headers: { Authorization: `Bearer ${token}` } 
+            });
+            savedQuestion = res.data || { ...payload, QuestionId: editingQuestionId, questionId: editingQuestionId };
+        } else {
+            const res = await axios.post("https://localhost:7240/api/questions", payload, { 
+                headers: { Authorization: `Bearer ${token}` } 
+            });
+            savedQuestion = res.data; 
+        }
+
+        // 3. Update State Directly (Instant UI)
+        setQuestions(prev => {
+            const typeKey = questionType.toUpperCase();
+            const updatedList = [...(prev[typeKey] || [])];
+
+            if (editingQuestionId) {
+                const index = updatedList.findIndex(q => (q.questionId ?? q.QuestionId) === editingQuestionId);
+                if (index !== -1) updatedList[index] = savedQuestion;
+            } else {
+                updatedList.unshift(savedQuestion); // Put new question at the top
+            }
+
+            return { ...prev, [typeKey]: updatedList };
+        });
+
+        setActiveTab(questionType.toUpperCase());
+        resetForm();
+        
+        Swal.fire({ 
+            icon: 'success', 
+            title: 'Saved Successfully', 
+            timer: 1500, 
+            showConfirmButton: false, 
+            background: colors.card, 
+            color: colors.textMain 
+        });
+
+    } catch (err) {
+        console.error("Save error:", err);
+        Swal.fire({ title: "Error", text: "Failed to save question", icon: "error" });
+    } finally {
+        // 4. Stop Loading
+        setLoading(false);
+    }
+};
   const resetForm = () => {
     setQuestionText(""); setMarks(2);
     setMcqOptions({ A: "", B: "", C: "", D: "", correct: "" });

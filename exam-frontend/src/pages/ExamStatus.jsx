@@ -142,21 +142,14 @@ const ExamStatus = () => {
                       </span>
                     </div>
 
-                    <h5 className="fw-bold mb-3" style={{color: colors.textMain}}>{exam.examName}</h5>
+                    <h5 className="fw-bold" style={{color: colors.textMain}}>{exam.examName}</h5>
 
-                    <div className="mb-4 p-3 rounded-3" style={{background: 'rgba(15, 23, 42, 0.4)', border: `1px solid ${colors.border}`}}>
-                      <div className="d-flex align-items-center gap-3 mb-3">
+                    <div className="p-3 mb-2 rounded-3" style={{background: 'rgba(15, 23, 42, 0.4)', border: `1px solid ${colors.border}`}}>
+                      <div className="d-flex align-items-center gap-3">
                         <FaClock style={{color: colors.primary}} size={16}/>
                         <span style={{color: colors.textLight, fontSize: '0.9rem'}}>Duration: <b>{exam.duration} mins</b></span>
                       </div>
-                      <div className="d-flex align-items-center gap-3">
-                        <FaAward style={{color: colors.warning}} size={16}/>
-                        <span style={{color: colors.textLight, fontSize: '0.9rem'}}>
-                          Score: <span style={{color: exam.isCompleted ? colors.success : colors.warning, fontWeight: 'bold'}}>
-                            {exam.isCompleted ? `${exam.obtainedMarks || 0} / ${exam.totalMarks}` : "Awaiting Review"}
-                          </span>
-                        </span>
-                      </div>
+                     
                     </div>
 
                     <div className="mt-auto pt-3 border-top" style={{borderColor: colors.border}}>
